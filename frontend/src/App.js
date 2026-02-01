@@ -5,6 +5,7 @@ import Applications from "./pages/Applications";
 import JobDrives from "./pages/JobDrives";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
+import Register from "./pages/Register";  
 import StudentDashboard from "./pages/StudentDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -14,6 +15,7 @@ function App() {
       <Navbar />
 <Routes>
   <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />
   <Route path="/company" element={<CompanyDashboard />} />
   <Route path="/dashboard/stats" element={<Dashboard />} />
   <Route path="/students" element={<Students />} />
