@@ -3,36 +3,65 @@ const router = express.Router();
 const auth = require("../middleware/auth.middleware");
 const db = require("../config/db");
 
-// Create job drive
+// ===============================
+// CREATE JOB DRIVE (FAST FIX)
+// ===============================
 router.post("/job", auth(["company"]), (req, res) => {
-  const { job_title, min_cgpa, drive_date } = req.body;
-  const company_id = req.user.id;
+  const { job_title, min_cgpa, drive_date, description } = req.body;
 
-  const query = `
-    INSERT INTO job_drives (company_id, job_title, min_cgpa, drive_date)
-    VALUES (?, ?, ?, ?)
-  `;
+  if (!job_title || !min_cgpa || !drive_date) {
+    return res.status(400).json({ message: "Required fields missing" });
+  }
 
-  db.query(query, [company_id, job_title, min_cgpa, drive_date], (err) => {
-    if (err) return res.status(500).json({ message: "Job creation failed" });
-    res.json({ message: "Job drive created" });
-  });
-});
+  // 🔑 STEP 1: Get company using email from JWT
+  const companyEmail = req.user.email;
 
-// View applicants
-router.get("/applicants", auth(["company"]), (req, res) => {
-  const query = `
-    SELECT students.name, applications.status
-    FROM applications
-    JOIN students ON applications.student_id = students.id
-    JOIN job_drives ON applications.job_drive_id = job_drives.id
-    WHERE job_drives.company_id = ?
-  `;
+  db.query(
+    "SELECT id FROM companies WHERE email = ?",
+    [companyEmail],
+    (err, result) => {
+      if (err) {
+        console.error("Company lookup error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
 
-  db.query(query, [req.user.id], (err, results) => {
-    if (err) return res.status(500).json({ message: "Error" });
-    res.json(results);
-  });
+      if (result.length === 0) {
+        return res.status(400).json({
+          message: "Company record not found. Please contact admin.",
+        });
+      }
+
+      const company_id = result[0].id;
+
+      // 🔑 STEP 2: Insert job drive using valid company_id
+      const insertQuery = `
+        INSERT INTO job_drives
+        (company_id, job_title, description, min_cgpa, drive_date)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      db.query(
+        insertQuery,
+        [
+          company_id,
+          job_title,
+          description || "",
+          min_cgpa,
+          drive_date,
+        ],
+        (err) => {
+          if (err) {
+            console.error("Job insert error:", err);
+            return res.status(500).json({ message: "Failed to create job drive" });
+          }
+
+          res.status(201).json({
+            message: "Job drive created successfully",
+          });
+        }
+      );
+    }
+  );
 });
 
 module.exports = router;
