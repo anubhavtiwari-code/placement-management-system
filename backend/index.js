@@ -320,6 +320,7 @@ app.use("/api/auth", require("./routes/auth.route"));
 
 // COMPANY ROUTES (JWT BASED)
 app.use("/api/company", require("./routes/company.route"));
+app.use("/api/student", require("./routes/student.route"));
 
 // =======================
 // BASIC TEST ROUTES

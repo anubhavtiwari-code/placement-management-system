@@ -1,25 +1,34 @@
 import { useEffect, useState } from "react";
-import api from "../api/api";
+import API from "../api/api";
 
-function StudentDashboard() {
+const StudentDashboard = () => {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    api.get("/job_drives").then(res => setJobs(res.data.job_drives));
+    API.get("/job_drives").then((res) => setJobs(res.data.job_drives));
   }, []);
 
-  const applyJob = (jobId) => {
-    api.post("/applications", { job_drive_id: jobId })
-      .then(() => alert("Applied successfully"));
+  const applyJob = async (jobId) => {
+    try {
+      await API.post("/student/apply", {
+        job_drive_id: jobId,
+      });
+      alert("Applied successfully");
+    } catch {
+      alert("Apply failed");
+    }
   };
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Available Jobs</h2>
-      {jobs.map(job => (
+      <h1 className="text-2xl font-bold mb-4">Available Jobs</h1>
+
+      {jobs.map((job) => (
         <div key={job.id} className="border p-4 mb-3 rounded">
-          <p className="font-semibold">{job.job_title}</p>
-          <p>{job.company_name}</p>
+          <h2 className="font-bold">{job.job_title}</h2>
+          <p>Company: {job.company_name}</p>
+          <p>Min CGPA: {job.min_cgpa}</p>
+
           <button
             onClick={() => applyJob(job.id)}
             className="mt-2 bg-green-600 text-white px-4 py-1 rounded"
@@ -30,6 +39,6 @@ function StudentDashboard() {
       ))}
     </div>
   );
-}
+};
 
 export default StudentDashboard;

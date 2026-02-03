@@ -1,56 +1,72 @@
 import { useState } from "react";
-import api from "../api/api";
+import API from "../api/api";
 import { useNavigate } from "react-router-dom";
-
-function Login() {
+import { Link } from "react-router-dom";
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await API.post("/auth/login", {
+        email,
+        password,
+      });
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
 
       if (res.data.role === "student") navigate("/student");
-      if (res.data.role === "company") navigate("/company");
-      if (res.data.role === "admin") navigate("/");
-
+     else  if (res.data.role === "company") navigate("/company");
+     else if (res.data.role === "admin") navigate("/dashboard");
     } catch (err) {
-      alert("Invalid credentials");
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="h-screen flex items-center justify-center">
-      <form onSubmit={handleLogin} className="border p-6 rounded w-80">
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-6 rounded shadow w-96"
+      >
         <h2 className="text-xl font-bold mb-4">Login</h2>
-        <input className="border p-2 w-full mb-3"
+
+        <input
+          type="email"
           placeholder="Email"
-          onChange={e => setEmail(e.target.value)}
+          className="border p-2 w-full mb-3"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
-        <input className="border p-2 w-full mb-3"
+
+        <input
           type="password"
           placeholder="Password"
-          onChange={e => setPassword(e.target.value)}
+          className="border p-2 w-full mb-4"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
-        <button className="bg-blue-600 text-white w-full p-2 rounded">
+
+        <button className="bg-blue-600 text-white w-full py-2 rounded">
           Login
         </button>
-        <p className="text-sm text-center mt-3">
-  Don’t have an account?{" "}
-  <span
-    className="text-blue-600 cursor-pointer"
-    onClick={() => navigate("/register")}
-  >
-    Register
-  </span>
+        {/* <button className="bg-blue-600 text-white w-full py-2 rounded mt-2">
+  Login
+</button> */}
+
+                    <p className="text-sm text-center mt-4">
+                  Don’t have an account?{" "}
+                   <Link to="/register" className="text-blue-600 hover:underline">
+                            Register
+                              </Link>
 </p>
       </form>
     </div>
   );
-}
+};
 
 export default Login;

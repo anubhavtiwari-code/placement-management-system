@@ -1,37 +1,42 @@
-import { useState } from "react";
-import api from "../api/api";
+import { useEffect, useState } from "react";
+import API from "../api/api";
 
-function CompanyDashboard() {
-  const [jobTitle, setJobTitle] = useState("");
-  const [cgpa, setCgpa] = useState("");
+const CompanyDashboard = () => {
+  const [applicants, setApplicants] = useState([]);
 
-  const createJob = () => {
-    api.post("/job_drives", {
-      job_title: jobTitle,
-      min_cgpa: cgpa,
-      drive_date: "2026-02-01",
-    }).then(() => alert("Job created"));
-  };
+  useEffect(() => {
+    API.get("/company/applicants")
+      .then((res) => setApplicants(res.data.applicants))
+      .catch(() => alert("Failed to load applicants"));
+  }, []);
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Create Job Drive</h2>
-      <input className="border p-2 mb-2 w-full"
-        placeholder="Job Title"
-        onChange={e => setJobTitle(e.target.value)}
-      />
-      <input className="border p-2 mb-2 w-full"
-        placeholder="Min CGPA"
-        onChange={e => setCgpa(e.target.value)}
-      />
-      <button
-        onClick={createJob}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Create
-      </button>
+      <h1 className="text-2xl font-bold mb-4">Applicants</h1>
+
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="p-2 border">Student</th>
+            <th className="p-2 border">Email</th>
+            <th className="p-2 border">Job</th>
+            <th className="p-2 border">Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {applicants.map((a, i) => (
+            <tr key={i}>
+              <td className="border p-2">{a.student_name}</td>
+              <td className="border p-2">{a.student_email}</td>
+              <td className="border p-2">{a.job_title}</td>
+              <td className="border p-2">{a.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
 
 export default CompanyDashboard;
