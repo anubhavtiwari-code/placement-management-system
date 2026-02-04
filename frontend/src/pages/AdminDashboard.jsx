@@ -13,7 +13,10 @@ const AdminDashboard = () => {
   if (!stats) return <p className="p-6">Loading...</p>;
 
   return (
+   
     <div className="p-6 grid grid-cols-2 gap-4">
+      <h1 className="text-2xl font-bold mb-6">🛠️ Admin Dashboard</h1>
+
       {Object.entries(stats).map(([key, value]) => (
         <div key={key} className="bg-white p-4 shadow rounded">
           <h2 className="text-gray-500">{key.replaceAll("_", " ")}</h2>

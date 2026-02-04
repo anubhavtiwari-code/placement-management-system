@@ -21,6 +21,8 @@ const StudentDashboard = () => {
 
   return (
     <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
+
       <h1 className="text-2xl font-bold mb-4">Available Jobs</h1>
 
       {jobs.map((job) => (
