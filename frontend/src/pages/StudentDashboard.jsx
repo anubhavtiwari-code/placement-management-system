@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
+import MyApplications from "./MyApplications";
 
 const StudentDashboard = () => {
   const [jobs, setJobs] = useState([]);
@@ -24,6 +25,7 @@ const StudentDashboard = () => {
       <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
 
       <h1 className="text-2xl font-bold mb-4">Available Jobs</h1>
+         <MyApplications />
 
       {jobs.map((job) => (
         <div key={job.id} className="border p-4 mb-3 rounded">
