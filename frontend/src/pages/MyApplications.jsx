@@ -1,40 +1,71 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../api/api";
 
-const MyApplications = () => {
+const MyApplications = ({ refresh }) => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("ALL");
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const res = await api.get("/applications");
-        setApplications(res.data.applications || []);
-      } catch (err) {
-        console.error("Failed to fetch applications", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApplications();
+  const fetchApplications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/applications");
+      setApplications(res.data.applications || []);
+    } catch (err) {
+      console.error("Failed to fetch applications", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // initial load
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
+
+  // refresh triggered by parent
+  useEffect(() => {
+    if (refresh) fetchApplications();
+  }, [refresh, fetchApplications]);
 
   if (loading) {
     return <p className="text-gray-500">Loading applications...</p>;
   }
 
+  // filter by status
+  const filteredApplications = applications.filter(app => {
+    if (filter === "ALL") return true;
+    return app.status?.toLowerCase() === filter.toLowerCase();
+  });
+
   return (
     <div className="mt-8">
       <h2 className="text-xl font-semibold mb-4">My Applications</h2>
 
-      {applications.length === 0 ? (
+      {/* Filters */}
+      <div className="flex gap-2 mb-4">
+        {["ALL", "Applied", "Selected", "Rejected"].map(status => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            className={`px-3 py-1 text-sm rounded ${
+              filter === status
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
+      {filteredApplications.length === 0 ? (
         <p className="text-gray-500">You haven’t applied to any jobs yet.</p>
       ) : (
         <div className="space-y-3">
-          {applications.map((app, index) => (
+          {filteredApplications.map(app => (
             <div
-              key={index}
+              key={app.application_id}
               className="border rounded-lg p-4 flex justify-between items-center bg-white"
             >
               <div>
