@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
 import MyApplications from "./MyApplications";
-
+import StudentProfile from "../components/StudentProfile";
 const StudentDashboard = () => {
   const [jobs, setJobs] = useState([]);
 const [appliedJobIds, setAppliedJobIds] = useState([]);
@@ -45,7 +45,7 @@ useEffect(() => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
-
+                  <StudentProfile />
       <h1 className="text-2xl font-bold mb-4">Available Jobs</h1>
          <MyApplications />
 
