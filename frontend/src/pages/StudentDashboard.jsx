@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
-import MyApplications from "./MyApplications";
+import MyApplications from "../pages/MyApplications";
 import StudentProfile from "../components/StudentProfile";
 const StudentDashboard = () => {
   const [jobs, setJobs] = useState([]);
@@ -45,10 +45,11 @@ useEffect(() => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">🎓 Student Dashboard</h1>
-                  <StudentProfile />
+                  
       <h1 className="text-2xl font-bold mb-4">Available Jobs</h1>
-         <MyApplications />
-
+         
+         <StudentProfile />
+       <MyApplications />
       {jobs.map((job) => (
         <div key={job.id} className="border p-4 mb-3 rounded">
           <h2 className="font-bold">{job.job_title}</h2>

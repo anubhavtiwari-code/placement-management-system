@@ -6,12 +6,13 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
+  const [cgpa , setCgpa] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/auth/register", { email, password, role });
+      await API.post("/auth/register", { email, password, role, cgpa });
       alert("Registered successfully. Please login.");
       navigate("/login");
     } catch (err) {
@@ -38,6 +39,13 @@ const Register = () => {
           className="border p-2 w-full mb-3"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="cgpa"
+          className="border p-2 w-full mb-3"
+          value={cgpa}
+          onChange={(e) => setCgpa(e.target.value)}
         />
 
         <select

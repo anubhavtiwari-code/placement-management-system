@@ -56,16 +56,17 @@ exports.applyJob = (req, res) => {
   );
 };
 exports.getProfile = (req, res) => {
-  const email = req.user.email;
+  const student_id = req.user.id;
 
   const query = `
-    SELECT id, name, email, branch, cgpa
+    SELECT id, name, email,cgpa
     FROM students
-    WHERE email = ?
+    WHERE id = ?
   `;
 
-  db.query(query, [email], (err, result) => {
+  db.query(query, [student_id], (err, result) => {
     if (err) {
+      console.error(err);
       return res.status(500).json({ message: "Failed to fetch profile" });
     }
 

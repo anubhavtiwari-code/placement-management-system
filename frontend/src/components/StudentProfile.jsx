@@ -30,7 +30,6 @@ const StudentProfile = () => {
       <div className="grid grid-cols-2 gap-3 text-sm">
         <p><span className="font-medium">Name:</span> {profile.name}</p>
         <p><span className="font-medium">Email:</span> {profile.email}</p>
-        <p><span className="font-medium">Branch:</span> {profile.branch}</p>
         <p><span className="font-medium">CGPA:</span> {profile.cgpa}</p>
       </div>
     </div>
