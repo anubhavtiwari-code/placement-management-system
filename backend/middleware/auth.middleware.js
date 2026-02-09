@@ -19,7 +19,7 @@ module.exports = (roles = []) => {
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
-    console.log("AUTH PAYLOAD:", decoded);
+    
       next(); // ✅ VERY IMPORTANT
     } catch (err) {
       return res.status(401).json({ message: "Unauthorized" });

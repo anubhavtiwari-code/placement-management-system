@@ -1,43 +1,51 @@
 const db = require("../config/db");
 
+/**
+ * GET /api/applications
+ * Fetch logged-in student's applications
+ */
 exports.getMyApplications = (req, res) => {
-  const studentEmail = req.user.email;
+  const userId = req.user.id; // users.id from JWT
 
-  // 1️⃣ Get student ID
+  // 1️⃣ Find student using user_id
   db.query(
-    "SELECT id FROM students WHERE email = ?",
-    [studentEmail],
+    "SELECT id FROM students WHERE user_id = ?",
+    [userId],
     (err, studentResult) => {
-      if (err || studentResult.length === 0) {
-        return res.status(400).json({ message: "Student not found" });
+      if (err) {
+        console.error("Student lookup error:", err);
+        return res.status(500).json({ message: "Student lookup failed" });
       }
 
-      const student_id = studentResult[0].id;
+      if (studentResult.length === 0) {
+        // Student profile not created yet
+        return res.status(200).json({ applications: [] });
+      }
 
-      // 2️⃣ Get applications with job details
+      const studentId = studentResult[0].id;
+
+      // 2️⃣ Fetch applications with job + company
       const query = `
-        SELECT 
+        SELECT
           a.id AS application_id,
-          a.job_drive_id,
           a.status,
           a.applied_at,
           j.job_title,
-          j.company_name
+          c.company_name
         FROM applications a
         JOIN job_drives j ON a.job_drive_id = j.id
+        JOIN companies c ON j.company_id = c.id
         WHERE a.student_id = ?
         ORDER BY a.applied_at DESC
       `;
 
-      db.query(query, [student_id], (err, applications) => {
+      db.query(query, [studentId], (err, results) => {
         if (err) {
-          console.error(err);
-          return res.status(500).json({ message: "Failed to fetch applications" });
+          console.error("Applications fetch error:", err);
+          return res.status(500).json({ message: "Failed to load applications" });
         }
 
-        res.status(200).json({
-          applications,
-        });
+        return res.status(200).json({ applications: results });
       });
     }
   );

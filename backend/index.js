@@ -324,6 +324,7 @@ app.use("/api/student", require("./routes/student.route"));
 app.use("/api", require("./routes/applicationRoutes"));
 
 
+
 // =======================
 // BASIC TEST ROUTES
 // =======================

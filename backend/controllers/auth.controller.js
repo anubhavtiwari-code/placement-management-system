@@ -19,14 +19,14 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
-      "INSERT INTO users (email, password, role, cgpa) VALUES (?, ?, ?, ?)",
-      [email, hashedPassword, role, cgpa ],
+      "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+      [email, hashedPassword, role, ],
       (err, userResult) => {
         if (err) {
           console.error("REGISTER ERROR:", err);
           return res.status(400).json({ message: "User already exists" });
         }
-
+               const userId = userResult.insertId;
         // 🔹 Auto-create ONLY for student & company
         if (role === "company") {
           db.query(
@@ -37,9 +37,15 @@ exports.register = async (req, res) => {
 
         if (role === "student") {
           db.query(
-            "INSERT INTO students (name, email, cgpa) VALUES (?, ?, ?)",
-            ["Student Name", email, 0]
+            "INSERT INTO students ( userId , name, email, cgpa) VALUES (?, ?, ?,?)",
+            [userId, "Student Name", email, cgpa ||null],
           );
+          (err) => {
+        if (err)
+          return res.status(500).json({ message: "Student profile creation failed" });
+
+        res.status(201).json({ message: "Student registered successfully" });
+      }
         }
 
         // 🔹 Admin has NO profile table (by design)

@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const auth = require("../middleware/auth.middleware");
 const { getMyApplications } = require("../controllers/applicationController");
-const authMiddleware = require("../middleware/auth.middleware");
 
-router.get("/applications", authMiddleware, getMyApplications);
+router.get("/applications", auth(["student"]), getMyApplications);
 
 module.exports = router;
+
+
