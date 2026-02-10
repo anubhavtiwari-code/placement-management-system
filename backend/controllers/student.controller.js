@@ -56,26 +56,22 @@ exports.applyJob = (req, res) => {
   );
 };
 exports.getProfile = (req, res) => {
-  const student_id = req.user.id;
+  const userId = req.user.id; // users.id from JWT
 
-  const query = `
-    SELECT id, name, email,cgpa
-    FROM students
-    WHERE id = ?
-  `;
+  db.query(
+    "SELECT name, email, cgpa FROM students WHERE user_id = ?",
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error("Profile fetch error:", err);
+        return res.status(500).json({ message: "Failed to fetch profile" });
+      }
 
-  db.query(query, [student_id], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Failed to fetch profile" });
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Student profile not found" });
+      }
+
+      return res.status(200).json(results[0]);
     }
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res.status(200).json({
-      profile: result[0],
-    });
-  });
+  );
 };

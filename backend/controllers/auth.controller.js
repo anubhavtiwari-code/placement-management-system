@@ -4,62 +4,52 @@ const jwt = require("jsonwebtoken");
 
 /* ================= REGISTER ================= */
 exports.register = async (req, res) => {
-  const { email, password, role, cgpa } = req.body;
+  const { email, password, role, name, cgpa } = req.body;
 
-  if (!email || !password || !role || (role === "student" && !cgpa)) {
-    return res.status(400).json({ message: "All fields required" });
+  if (!email || !password || !role) {
+    return res.status(400).json({ message: "Missing fields" });
   }
 
-  // ✅ Explicit role validation (THIS IS THE KEY FIX)
-  if (!["student", "company", "admin"].includes(role)) {
-    return res.status(400).json({ message: "Invalid role" });
-  }
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    db.query(
-      "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
-      [email, hashedPassword, role, ],
-      (err, userResult) => {
-        if (err) {
-          console.error("REGISTER ERROR:", err);
-          return res.status(400).json({ message: "User already exists" });
-        }
-               const userId = userResult.insertId;
-        // 🔹 Auto-create ONLY for student & company
-        if (role === "company") {
-          db.query(
-            "INSERT INTO companies (name, email) VALUES (?, ?)",
-            ["Company Name", email]
-          );
-        }
-
-        if (role === "student") {
-          db.query(
-            "INSERT INTO students ( userId , name, email, cgpa) VALUES (?, ?, ?,?)",
-            [userId, "Student Name", email, cgpa ||null],
-          );
-          (err) => {
-        if (err)
-          return res.status(500).json({ message: "Student profile creation failed" });
-
-        res.status(201).json({ message: "Student registered successfully" });
+  // 1️⃣ Insert into users
+  db.query(
+    "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+    [email, hashedPassword, role],
+    (err, userResult) => {
+      if (err) {
+        return res.status(500).json({ message: "User registration failed" });
       }
-        }
 
-        // 🔹 Admin has NO profile table (by design)
+      const userId = userResult.insertId;
 
-        res.status(201).json({
-          message: `${role} registered successfully`,
+      // 2️⃣ If student, create student profile
+      if (role === "student") {
+        db.query(
+          "INSERT INTO students (name, email, cgpa, user_id) VALUES (?, ?, ?, ?)",
+          [name || "Student", email, cgpa || 0, userId],
+          (err) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ message: "Student profile creation failed" });
+            }
+
+            return res.status(201).json({
+              message: "Student registered successfully"
+            });
+          }
+        );
+      } else {
+        // company / admin
+        return res.status(201).json({
+          message: "User registered successfully"
         });
       }
-    );
-  } catch (error) {
-    console.error("REGISTER SERVER ERROR:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+    }
+  );
 };
+
 
 /* ================= LOGIN ================= */
 exports.login = (req, res) => {
