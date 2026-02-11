@@ -10,10 +10,20 @@ const [form, setForm] = useState({
   description: "",
 });
 const createJob = async () => {
-  await API.post("/company/job-drive", form)
-;
-alert("Job created successfully");
+  try {
+    await API.post("/company/job_drives", {
+      job_title: form.job_title,
+      min_cgpa: form.min_cgpa,
+      description: form.description
+    });
+
+    alert("Job created successfully");
+  } catch (err) {
+    console.error(err);
+    alert("Job creation failed");
+  }
 };
+
 
 
 
@@ -27,6 +37,37 @@ alert("Job created successfully");
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">🏢 Company Dashboard</h1>
+       <div className="bg-white p-6 rounded mb-6">
+  <h2 className="text-xl font-semibold mb-4">Create Job Drive</h2>
+
+  <input
+    type="text"
+    placeholder="Job Title"
+    className="border p-2 mb-2 w-full"
+    onChange={(e) => setForm({...form, job_title: e.target.value})}
+  />
+
+  <input
+    type="number"
+    placeholder="Minimum CGPA"
+    className="border p-2 mb-2 w-full"
+    onChange={(e) => setForm({...form, min_cgpa: e.target.value})}
+  />
+
+  <textarea
+    placeholder="Job Description"
+    className="border p-2 mb-2 w-full"
+    onChange={(e) => setForm({...form, description: e.target.value})}
+  />
+
+  <button
+    onClick={createJob}
+    className="bg-blue-600 text-white px-4 py-2 rounded"
+  >
+    Create Job 
+  </button>
+</div>
+
 
       <h1 className="text-2xl font-bold mb-4">Applicants</h1>
 
