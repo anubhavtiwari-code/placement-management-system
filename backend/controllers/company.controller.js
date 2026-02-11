@@ -1,23 +1,33 @@
 const db = require("../config/db");
 
 // CREATE JOB
-exports.createJob = (req, res) => {
-  const { job_title, min_cgpa, drive_date, description } = req.body;
-  const companyEmail = req.user.email;
-
-  if (!job_title || !min_cgpa || !drive_date) {
-    return res.status(400).json({ message: "Required fields missing" });
-  }
+exports.createJobDrive = (req, res) => {
+  const { job_title, min_cgpa, description } = req.body;
+  const companyUserId = req.user.id;
 
   db.query(
-    "SELECT id FROM companies WHERE email = ?",
-    [companyEmail],
-    (err, companyResult) => {
-      if (err || companyResult.length === 0) {
+    "SELECT id FROM Companies WHERE user_id = ?",
+    [companyUserId],
+    (err, companyRows) => {
+      if (err || companyRows.length === 0) {
         return res.status(400).json({ message: "Company not found" });
       }
 
-      const company_id = companyResult[0].id;
+      const company_id = companyRows[0].id;
+
+      if (!job_title || !min_cgpa || !description) {
+        return res.status(400).json({ message: "Required fields missing" });
+      }
+
+  // db.query(
+  //   "SELECT id FROM companies WHERE email = ?",
+  //   [companyEmail],
+  //   (err, companyResult) => {
+  //     if (err || companyResult.length === 0) {
+  //       return res.status(400).json({ message: "Company not found" });
+  //     }
+
+  //     const company_id = companyResult[0].id;
 
       db.query(
         `INSERT INTO job_drives 

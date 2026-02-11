@@ -4,6 +4,20 @@ import API from "../api/api";
 const CompanyDashboard = () => {
   const [applicants, setApplicants] = useState([]);
 
+const [form, setForm] = useState({
+  job_title: "",
+  min_cgpa: "",
+  description: "",
+});
+const createJob = async () => {
+  await API.post("/company/job-drive", form)
+;
+alert("Job created successfully");
+};
+
+
+
+
   useEffect(() => {
     API.get("/company/applicants")
       .then((res) => setApplicants(res.data.applicants))
@@ -38,6 +52,38 @@ const CompanyDashboard = () => {
         </tbody>
       </table>
     </div>
+
+//     <div className="bg-white p-6 rounded mb-6">
+//   <h2 className="text-xl font-semibold mb-4">Create Job Drive</h2>
+
+//   <input
+//     type="text"
+//     placeholder="Job Title"
+//     className="border p-2 mb-2 w-full"
+//     onChange={(e) => setForm({...form, job_title: e.target.value})}
+//   />
+
+//   <input
+//     type="number"
+//     placeholder="Minimum CGPA"
+//     className="border p-2 mb-2 w-full"
+//     onChange={(e) => setForm({...form, min_cgpa: e.target.value})}
+//   />
+
+//   <textarea
+//     placeholder="Job Description"
+//     className="border p-2 mb-2 w-full"
+//     onChange={(e) => setForm({...form, description: e.target.value})}
+//   />
+
+//   <button
+//     onClick={createJob}
+//     className="bg-blue-600 text-white px-4 py-2 rounded"
+//   >
+//     Create Job
+//   </button>
+// </div>
+
   );
 };
 
