@@ -4,6 +4,8 @@ const db = require("../config/db");
  * GET /api/applications
  * Fetch logged-in student's applications
  */
+const sendAssignmentEmail = require("../utils/sendEmail");
+
 exports.getMyApplications = (req, res) => {
   const userId = req.user.id; // users.id from JWT
 
@@ -23,15 +25,18 @@ exports.getMyApplications = (req, res) => {
 
       const studentId = studentRows[0].id;
 
-      // 2️⃣ Fetch applications + job title ONLY
+      // 2️⃣ Fetch applications with job title, company name, and job_drive_id
       const query = `
         SELECT
-          a.id AS application_id,
+          a.id          AS application_id,
+          a.job_drive_id,
           a.status,
           a.applied_at,
-          j.job_title
+          j.job_title,
+          c.name        AS company_name
         FROM applications a
-        JOIN job_drives j ON a.job_drive_id = j.id
+        JOIN job_drives j  ON a.job_drive_id  = j.id
+        JOIN companies  c  ON j.company_id    = c.id
         WHERE a.student_id = ?
         ORDER BY a.applied_at DESC
       `;

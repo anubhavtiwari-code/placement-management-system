@@ -1,11 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth.middleware");
-const companyController = require("../controllers/company.controller");
+const c = require("../controllers/company.controller");
 
-//router.post("/job", auth(["company"]), companyController.createJob);
-router.get("/applicants", auth(["company"]), companyController.viewApplicants);
-router.post("/job_drives", auth(["company"]), companyController.createJob);
+// ── Job Drive CRUD ──────────────────────────────────────────────────────────
+router.get("/job_drives",           auth(["company"]), c.getMyDrives);
+router.post("/job_drives",          auth(["company"]), c.createJob);
+router.put("/job_drives/:id",       auth(["company"]), c.editJob);
+router.delete("/job_drives/:id",    auth(["company"]), c.deleteJob);
+router.patch("/job_drives/:id/status", auth(["company"]), c.toggleStatus);
 
+// ── Applicants ───────────────────────────────────────────────────────────────
+router.get("/applicants",                    auth(["company"]), c.viewApplicants);
+router.patch("/applications/:id/status",     auth(["company"]), c.updateApplicantStatus);
 
 module.exports = router;

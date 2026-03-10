@@ -378,8 +378,8 @@ app.get("/api/job_drives", (req, res) => {
   });
 });
 
-// GET APPLICATIONS (admin view)
-app.get("/api/applications", (req, res) => {
+// GET APPLICATIONS (admin view) — renamed to avoid shadowing the student /api/applications route
+app.get("/api/admin/applications", (req, res) => {
   const query = `
     SELECT
       applications.id,
