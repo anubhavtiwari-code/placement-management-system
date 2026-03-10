@@ -20,8 +20,8 @@ const Login = () => {
       localStorage.setItem("role", res.data.role);
 
       if (res.data.role === "student") navigate("/student");
-     else  if (res.data.role === "company") navigate("/company");
-     else if (res.data.role === "admin") navigate("/dashboard");
+      else if (res.data.role === "company") navigate("/company");
+      else if (res.data.role === "admin") navigate("/admin");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
