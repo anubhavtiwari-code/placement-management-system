@@ -343,6 +343,19 @@ app.get("/api/test", (req, res) => {
   });
 });
 
+app.get("/api/db-test", (req, res) => {
+  db.query("SELECT 1", (err, result) => {
+    if (err) {
+      return res.status(500).json({ 
+        message: "Database connection failed", 
+        error: err.message,
+        code: err.code 
+      });
+    }
+    res.json({ message: "Database is connected and querying!", result });
+  });
+});
+
 // PROTECTED TEST ROUTE
 app.get("/api/protected", auth(["student", "company", "admin"]), (req, res) => {
   res.json({
