@@ -2,13 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-100 text-gray-800;
-}
-.btn-primary {
-  @apply bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700;
+@layer base {
+  body {
+    @apply bg-[#0f172a] text-slate-200 antialiased selection:bg-brand-500 selection:text-white font-sans;
+    background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+    background-attachment: fixed;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
 }
 
-.btn-outline {
-  @apply border border-blue-600 text-blue-600 px-6 py-2 rounded hover:bg-blue-50;
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-medium text-white bg-brand-600 hover:bg-brand-500 transition-all duration-200 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-medium text-slate-300 border border-slate-700 bg-white/5 hover:bg-white/10 hover:text-white transition-all duration-200 backdrop-blur-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Glassmorphism Cards */
+  .glass-panel {
+    @apply bg-slate-900/60 backdrop-blur-xl border border-slate-800 shadow-2xl rounded-2xl;
+  }
+  
+  .glass-card {
+    @apply bg-slate-800/40 backdrop-blur-md border border-slate-700/50 hover:border-slate-600/80 transition-all duration-300 rounded-xl shadow-lg hover:shadow-brand-500/10;
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-500;
+  }
+}
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a; 
+}
+::-webkit-scrollbar-thumb {
+  background: #334155; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; 
 }

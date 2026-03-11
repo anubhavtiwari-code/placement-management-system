@@ -429,6 +429,12 @@ app.get("/api/dashboard/stats", (req, res) => {
 });
 
 // =======================
+// ERROR HANDLING MIDDLEWARE
+// =======================
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
+
+// =======================
 // SERVER
 // =======================
 const PORT = process.env.PORT || 5000;
