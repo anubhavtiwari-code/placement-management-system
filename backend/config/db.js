@@ -1,7 +1,13 @@
 const mysql = require("mysql2");
 
-const db = process.env.DATABASE_URL
-  ? mysql.createPool(process.env.DATABASE_URL)
+let dbUrl = process.env.DATABASE_URL;
+if (dbUrl && !dbUrl.includes("ssl=")) {
+  // TiDB Cloud Serverless absolutely requires a secure connection.
+  dbUrl += (dbUrl.includes("?") ? "&" : "?") + "ssl={\"rejectUnauthorized\":true}";
+}
+
+const db = dbUrl
+  ? mysql.createPool(dbUrl)
   : mysql.createPool({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
