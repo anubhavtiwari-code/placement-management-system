@@ -15,7 +15,11 @@ const db = dbUrl
       database: process.env.DB_NAME,
       waitForConnections: true,
       connectionLimit: 10,
-      queueLimit: 0
+      queueLimit: 0,
+      // Enforce SSL for cloud databases (TiDB/Aiven) but disable for local XAMPP/MySQL
+      ssl: process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1' 
+        ? undefined 
+        : { rejectUnauthorized: true }
     });
 
 db.getConnection((err, connection) => {
