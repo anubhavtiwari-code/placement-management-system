@@ -308,7 +308,10 @@ const auth = require("./middleware/auth.middleware");
 // =======================
 // MIDDLEWARE
 // =======================
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  credentials: true
+}));
 app.use(express.json());
 
 // =======================
