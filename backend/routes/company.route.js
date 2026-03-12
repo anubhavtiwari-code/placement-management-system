@@ -12,6 +12,8 @@ router.patch("/job_drives/:id/status", auth(["company"]), c.toggleStatus);
 
 // ── Applicants ───────────────────────────────────────────────────────────────
 router.get("/applicants",                    auth(["company"]), c.viewApplicants);
+router.patch("/applications/batch-status",   auth(["company"]), c.batchUpdateStatus); // New: Batch update
 router.patch("/applications/:id/status",     auth(["company"]), c.updateApplicantStatus);
+router.patch("/applications/:id/schedule",   auth(["company"]), c.scheduleInterview); // New: Scheduler
 
 module.exports = router;

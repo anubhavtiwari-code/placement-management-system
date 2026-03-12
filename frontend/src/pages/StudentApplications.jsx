@@ -89,9 +89,17 @@ const StudentApplications = () => {
             >
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-200 truncate">{app.job_title}</p>
-                <p className="text-sm text-brand-400/80 mt-0.5 font-medium">
-                  🏢 {app.company_name || "—"}
-                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                  <p className="text-sm text-brand-400/80 font-medium">
+                    🏢 {app.company_name || "—"}
+                  </p>
+                  {app.interview_date && (
+                    <div className="flex items-center gap-1.5 text-xs text-purple-400 font-bold bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
+                      <span>📅</span>
+                      {new Date(app.interview_date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <span

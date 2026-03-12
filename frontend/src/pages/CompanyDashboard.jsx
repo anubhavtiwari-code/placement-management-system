@@ -27,6 +27,7 @@ const CompanyDashboard = () => {
   const [applicants, setApplicants] = useState([]);
   const [appsLoading, setAppsLoading] = useState(true);
   const [cgpaFilter, setCgpaFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]); // NEW: for batch actions
 
   // ── form (create / edit) ──
   const [form, setForm] = useState({ job_title: "", min_cgpa: "", description: "", drive_date: "" });
@@ -51,7 +52,10 @@ const CompanyDashboard = () => {
     API.get("/company/applicants")
       .then((r) => setApplicants(r.data.applicants || []))
       .catch(() => toast.error("Failed to load applicants"))
-      .finally(() => setAppsLoading(false));
+      .finally(() => {
+        setAppsLoading(false);
+        setSelectedIds([]); 
+      });
   };
 
   useEffect(() => {
@@ -135,6 +139,42 @@ const CompanyDashboard = () => {
     } catch {
       toast.error("Failed to update status.");
     }
+  };
+
+  const scheduleInterview = async (applicationId, date) => {
+    if (!date) return;
+    try {
+      await API.patch(`/company/applications/${applicationId}/schedule`, { interview_date: date });
+      setApplicants((prev) =>
+        prev.map((a) => (a.application_id === applicationId ? { ...a, status: "Interview", interview_date: date } : a))
+      );
+      toast.success("Interview scheduled");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to schedule interview");
+    }
+  };
+
+  const batchUpdateStatus = async (status) => {
+    if (selectedIds.length === 0) return toast.error("No applicants selected");
+    try {
+      await API.patch(`/company/applications/batch-status`, { ids: selectedIds, status });
+      setApplicants((prev) =>
+        prev.map((a) => selectedIds.includes(a.application_id) ? { ...a, status } : a)
+      );
+      setSelectedIds([]);
+      toast.success(`Updated ${selectedIds.length} applicants to ${status}`);
+    } catch {
+      toast.error("Batch update failed");
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredApplicants.length) setSelectedIds([]);
+    else setSelectedIds(filteredApplicants.map(a => a.application_id));
   };
 
   // ── filtered applicants ───────────────────────────────────────────────────
@@ -375,6 +415,26 @@ const CompanyDashboard = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Batch Actions */}
+                {selectedIds.length > 0 && (
+                  <div className="flex items-center gap-3 animate-fade-in">
+                    <span className="text-xs text-brand-400 font-bold uppercase tracking-wider">
+                      {selectedIds.length} Selected
+                    </span>
+                    <select
+                      onChange={(e) => batchUpdateStatus(e.target.value)}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-md border bg-brand-500/10 border-brand-500/30 text-brand-400 outline-none"
+                      defaultValue=""
+                    >
+                      <option value="" disabled className="bg-slate-900">Batch Action...</option>
+                      {["Shortlisted", "Interview", "Selected", "Rejected"].map(s => (
+                        <option key={s} value={s} className="bg-slate-900 text-slate-200">{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="text-sm px-3 py-1 bg-slate-800 rounded-md text-slate-400 border border-slate-700">
                   <span className="text-brand-400 font-bold">{filteredApplicants.length}</span> matching records
                 </div>
@@ -395,16 +455,32 @@ const CompanyDashboard = () => {
                   <table className="w-full text-sm text-left whitespace-nowrap">
                     <thead className="bg-slate-800/80 text-slate-300 border-b border-slate-700/50">
                       <tr>
+                        <th className="px-4 py-4 w-10">
+                          <input 
+                            type="checkbox" 
+                            className="accent-brand-500" 
+                            checked={selectedIds.length === filteredApplicants.length && filteredApplicants.length > 0}
+                            onChange={toggleSelectAll}
+                          />
+                        </th>
                         <th className="px-6 py-4 font-medium">Candidate Profile</th>
                         <th className="px-6 py-4 font-medium">Academic Rating</th>
                         <th className="px-6 py-4 font-medium">Target Pipeline</th>
-                        <th className="px-6 py-4 font-medium">Timestamp</th>
+                        <th className="px-6 py-4 font-medium">Interview Info</th>
                         <th className="px-6 py-4 font-medium text-right">Selection State</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700/30 bg-slate-900/30">
                       {filteredApplicants.map((a) => (
-                        <tr key={a.application_id} className="hover:bg-slate-800/50 transition-colors">
+                        <tr key={a.application_id} className={`hover:bg-slate-800/50 transition-colors ${selectedIds.includes(a.application_id) ? "bg-brand-500/5" : ""}`}>
+                          <td className="px-4 py-4">
+                            <input 
+                              type="checkbox" 
+                              className="accent-brand-500"
+                              checked={selectedIds.includes(a.application_id)}
+                              onChange={() => toggleSelect(a.application_id)}
+                            />
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="font-semibold text-slate-200">{a.student_name}</span>
@@ -415,8 +491,24 @@ const CompanyDashboard = () => {
                             <span className="font-bold text-brand-400 tracking-wide">{Number(a.student_cgpa).toFixed(2)}</span>
                           </td>
                           <td className="px-6 py-4 text-slate-300">{a.job_title}</td>
-                          <td className="px-6 py-4 text-slate-500 text-xs">
-                            {new Date(a.applied_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric'})}
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1.5">
+                              {a.interview_date ? (
+                                <div className="text-xs flex items-center gap-1.5 text-purple-400 bg-purple-500/10 px-2 py-1 rounded-md border border-purple-500/20 w-max">
+                                  <span>📅</span>
+                                  {new Date(a.interview_date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                                </div>
+                              ) : (
+                                <input
+                                  type="datetime-local"
+                                  className="text-[10px] bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-400 focus:border-purple-500 outline-none [color-scheme:dark]"
+                                  onChange={(e) => scheduleInterview(a.application_id, e.target.value)}
+                                />
+                              )}
+                              <span className="text-[10px] text-slate-500">
+                                Applied {new Date(a.applied_at).toLocaleDateString()}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <select

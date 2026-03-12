@@ -163,7 +163,8 @@ exports.viewApplicants = (req, res) => {
         job_drives.job_title,
         job_drives.id   AS job_drive_id,
         applications.status,
-        applications.applied_at
+        applications.applied_at,
+        applications.interview_date
       FROM applications
       JOIN students   ON applications.student_id   = students.id
       JOIN job_drives ON applications.job_drive_id = job_drives.id
@@ -178,7 +179,7 @@ exports.viewApplicants = (req, res) => {
   });
 };
 
-// ─── UPDATE APPLICANT STATUS ───────────────────────────────────────────────
+// ── UPDATE APPLICANT STATUS ───────────────────────────────────────────────
 exports.updateApplicantStatus = (req, res) => {
   const { id } = req.params; // application id
   const { status } = req.body;
@@ -204,6 +205,75 @@ exports.updateApplicantStatus = (req, res) => {
       if (result.affectedRows === 0)
         return res.status(404).json({ message: "Application not found or access denied" });
       res.json({ message: "Status updated successfully", status });
+    });
+  });
+};
+
+// ── BATCH UPDATE APPLICANT STATUS ──────────────────────────────────────────
+exports.batchUpdateStatus = (req, res) => {
+  const { ids, status } = req.body; // ids is an array of application IDs
+
+  const allowed = ["Applied", "Shortlisted", "Interview", "Selected", "Rejected"];
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "An array of application IDs is required" });
+  }
+  if (!allowed.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
+
+  getCompanyId(req.user.email, (err, company_id) => {
+    if (err) return res.status(400).json({ message: err.message });
+
+    const query = `
+      UPDATE applications a
+      JOIN job_drives j ON a.job_drive_id = j.id
+      SET a.status = ?
+      WHERE a.id IN (?) AND j.company_id = ?
+    `;
+
+    db.query(query, [status, ids, company_id], (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json({ 
+        message: `${result.affectedRows} applications updated successfully`, 
+        status,
+        count: result.affectedRows 
+      });
+    });
+  });
+};
+
+// ── SCHEDULE INTERVIEW ─────────────────────────────────────────────────────
+exports.scheduleInterview = (req, res) => {
+  const { id } = req.params; // application id
+  const { interview_date } = req.body; // e.g., '2023-10-15 14:00:00'
+
+  if (!interview_date) {
+    return res.status(400).json({ message: "Interview date/time is required" });
+  }
+
+  getCompanyId(req.user.email, (err, company_id) => {
+    if (err) return res.status(400).json({ message: err.message });
+
+    const query = `
+      UPDATE applications a
+      JOIN job_drives j ON a.job_drive_id = j.id
+      SET a.interview_date = ?, a.status = 'Interview'
+      WHERE a.id = ? AND j.company_id = ?
+    `;
+
+    db.query(query, [interview_date, id, company_id], (err, result) => {
+      if (err) {
+        if (err.code === "ER_BAD_FIELD_ERROR") {
+          return res.status(400).json({ 
+            message: "Database schema lacks 'interview_date' column in 'applications' table." 
+          });
+        }
+        return res.status(500).json({ message: "Database error" });
+      }
+      if (result.affectedRows === 0)
+        return res.status(404).json({ message: "Application not found or access denied" });
+      
+      res.json({ message: "Interview scheduled and status updated", interview_date });
     });
   });
 };

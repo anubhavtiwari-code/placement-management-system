@@ -32,6 +32,7 @@ exports.getMyApplications = (req, res) => {
           a.job_drive_id,
           a.status,
           a.applied_at,
+          a.interview_date,
           j.job_title,
           c.name        AS company_name
         FROM applications a
