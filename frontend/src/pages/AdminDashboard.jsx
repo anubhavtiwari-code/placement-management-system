@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import API from "../api/api";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -37,14 +37,15 @@ const StatCard = ({ title, value, colorClass, lineColor, icon }) => {
           {icon}
         </div>
       </div>
-      <div className="w-full h-[60px] relative z-10 mt-2">
+      <div style={{ width: '100%', height: 60, position: 'relative' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
             <Tooltip
               contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
               labelStyle={{ display: 'none' }}
+              cursor={{ stroke: lineColor, strokeWidth: 1 }}
             />
-            <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={3} dot={{ r: 0 }} />
+            <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={3} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -59,30 +60,34 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [tab, setTab] = useState("stats"); // stats | verification | reports
   const [loading, setLoading] = useState(true);
+  const fetchRef = useRef(false);
 
-  const loadStats = () => {
-    API.get("/admin/stats")
-      .then((res) => setStats(res.data))
-      .catch(() => toast.error("Failed to load statistics"));
-  };
-
-  const loadCompanies = () => {
-    API.get("/admin/companies")
-      .then((res) => setCompanies(res.data))
-      .catch(() => toast.error("Failed to load companies"));
+  const loadData = async () => {
+    try {
+      const [statsRes, companiesRes] = await Promise.all([
+        API.get("/admin/stats"),
+        API.get("/admin/companies")
+      ]);
+      setStats(statsRes.data);
+      setCompanies(companiesRes.data);
+    } catch (err) {
+      toast.error("Analytics synchronization failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadStats();
-    loadCompanies();
-    setLoading(false);
+    if (fetchRef.current) return;
+    fetchRef.current = true;
+    loadData();
   }, []);
 
   const handleVerify = async (id, status) => {
     try {
       await API.patch(`/admin/companies/${id}`, { status });
       toast.success(`Company ${status}!`);
-      loadCompanies();
+      loadData();
     } catch {
       toast.error("Verification failed");
     }
