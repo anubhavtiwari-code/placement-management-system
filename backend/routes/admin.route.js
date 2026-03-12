@@ -1,22 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth.middleware");
-const db = require("../config/db");
+const ad = require("../controllers/admin.controller");
 
-// Dashboard stats
-router.get("/stats", auth(["admin"]), (req, res) => {
-  const query = `
-    SELECT
-      (SELECT COUNT(*) FROM students) total_students,
-      (SELECT COUNT(*) FROM companies) total_companies,
-      (SELECT COUNT(*) FROM job_drives) total_jobs,
-      (SELECT COUNT(*) FROM applications) total_applications
-  `;
+// Stats
+router.get("/stats",            auth(["admin"]), ad.getStats);
 
-  db.query(query, (err, result) => {
-    if (err) return res.status(500).json({ message: "Error" });
-    res.json(result[0]);
-  });
-});
+// Company Management
+router.get("/companies",         auth(["admin"]), ad.getCompanies);
+router.patch("/companies/:id",   auth(["admin"]), ad.verifyCompany);
+
+// Reports
+router.get("/export-data",       auth(["admin"]), ad.exportPlacementData);
+
+// Bulk Actions
+router.post("/bulk-students",    auth(["admin"]), ad.bulkOnboardStudents);
 
 module.exports = router;
