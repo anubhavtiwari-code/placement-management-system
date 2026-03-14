@@ -65,18 +65,25 @@ const AdminDashboard = () => {
 
   const loadData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
+    
+    // Fetch stats first for immediate display
     try {
-      const [statsRes, companiesRes] = await Promise.all([
-        API.get("/admin/stats"),
-        API.get("/admin/companies")
-      ]);
+      const statsRes = await API.get("/admin/stats");
       setStats(statsRes.data);
-      setCompanies(companiesRes.data);
-      if (isRefresh) toast.success("Dashboard data synchronized");
+      setLoading(false); // Move past loading screen as soon as stats are here
     } catch (err) {
-      toast.error("Analytics synchronization failed");
+      console.error("Stats fetch error:", err);
+      toast.error("Statistics synchronization failed");
+    }
+
+    // Fetch companies separately
+    try {
+      const companiesRes = await API.get("/admin/companies");
+      setCompanies(Array.isArray(companiesRes.data) ? companiesRes.data : []);
+    } catch (err) {
+      console.error("Companies fetch error:", err);
+      // Don't toast here to avoid spamming the user if verification isn't critical
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };

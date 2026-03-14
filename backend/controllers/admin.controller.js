@@ -18,7 +18,7 @@ exports.getStats = (req, res) => {
       (SELECT COUNT(*) FROM companies) AS total_companies,
       (SELECT COUNT(*) FROM job_drives) AS total_job_drives,
       (SELECT COUNT(*) FROM applications) AS total_applications,
-      (SELECT COUNT(*) FROM applications WHERE status = "Selected") AS total_selected_students
+      (SELECT COUNT(*) FROM applications WHERE status = 'Selected') AS total_selected_students
   `;
 
   db.query(query, (err, results) => {
