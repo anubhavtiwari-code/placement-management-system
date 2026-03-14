@@ -53,3 +53,30 @@ exports.getMyApplications = (req, res) => {
     }
   );
 };
+/**
+ * GET /api/job_drives
+ * Fetch all open job drives for students
+ */
+exports.getAllOpenDrives = (req, res) => {
+  const query = `
+    SELECT 
+      j.id, 
+      j.job_title, 
+      j.min_cgpa, 
+      j.description, 
+      j.drive_date, 
+      c.name AS company_name 
+    FROM job_drives j
+    JOIN companies c ON j.company_id = c.id
+    WHERE j.status = 'open'
+    ORDER BY j.id DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Fetch job drives failed:", err);
+      return res.status(500).json({ message: "Failed to fetch job drives" });
+    }
+    res.status(200).json({ job_drives: results });
+  });
+};

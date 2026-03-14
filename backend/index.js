@@ -36,16 +36,43 @@ app.use("/api",         require("./routes/applicationRoutes"));
 // =======================
 // DB INITIALIZATION (MIGRATIONS)
 // =======================
-// Version-safe migration for verification_status
+
+// 1. Verification Status in Companies
 db.query("SHOW COLUMNS FROM companies LIKE 'verification_status'", (err, rows) => {
-  if (err) return console.error("Migration check error:", err.message);
+  if (err) return console.error("Migration error (companies):", err.message);
   if (rows.length === 0) {
-    db.query(`
-      ALTER TABLE companies 
-      ADD COLUMN verification_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'
-    `, (err) => {
-      if (err) console.error("Migration execution error:", err.message);
-      else console.log("Database Migration: Added verification_status to companies table.");
+    db.query("ALTER TABLE companies ADD COLUMN verification_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'", (err) => {
+      if (!err) console.log("Migration: Added verification_status to companies.");
+    });
+  }
+});
+
+// 2. Interview Date in Applications
+db.query("SHOW COLUMNS FROM applications LIKE 'interview_date'", (err, rows) => {
+  if (err) return console.error("Migration error (applications):", err.message);
+  if (rows.length === 0) {
+    db.query("ALTER TABLE applications ADD COLUMN interview_date DATETIME DEFAULT NULL", (err) => {
+      if (!err) console.log("Migration: Added interview_date to applications.");
+    });
+  }
+});
+
+// 3. Status in Job Drives
+db.query("SHOW COLUMNS FROM job_drives LIKE 'status'", (err, rows) => {
+  if (err) return console.error("Migration error (job_drives):", err.message);
+  if (rows.length === 0) {
+    db.query("ALTER TABLE job_drives ADD COLUMN status ENUM('open', 'closed') DEFAULT 'open'", (err) => {
+      if (!err) console.log("Migration: Added status to job_drives.");
+    });
+  }
+});
+
+// 4. User ID in Students (for JWT mapping)
+db.query("SHOW COLUMNS FROM students LIKE 'user_id'", (err, rows) => {
+  if (err) return console.error("Migration error (students):", err.message);
+  if (rows.length === 0) {
+    db.query("ALTER TABLE students ADD COLUMN user_id INT, ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE", (err) => {
+      if (!err) console.log("Migration: Added user_id to students.");
     });
   }
 });
