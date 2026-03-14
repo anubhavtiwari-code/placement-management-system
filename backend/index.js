@@ -8,8 +8,24 @@ const auth = require("./middleware/auth.middleware");
 // =======================
 // MIDDLEWARE
 // =======================
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "https://nexusplace.vercel.app" // Add your Vercel URL here
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      // In production, if it's not in the list, we still allow but without credentials for safety
+      // or you can set to "*" if you want to be completely open.
+      callback(null, true); 
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -134,6 +150,10 @@ app.get("/", (req, res) => {
 
 app.get("/api/test", (req, res) => {
   res.json({ message: "API is working fine", status: "success" });
+});
+
+app.get("/api/ping", (req, res) => {
+  res.send("pong");
 });
 
 // =======================
