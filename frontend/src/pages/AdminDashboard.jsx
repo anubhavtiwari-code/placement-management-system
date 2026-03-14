@@ -60,9 +60,11 @@ const AdminDashboard = () => {
   const [companies, setCompanies] = useState([]);
   const [tab, setTab] = useState("stats"); // stats | verification | reports
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const fetchRef = useRef(false);
 
-  const loadData = async () => {
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
     try {
       const [statsRes, companiesRes] = await Promise.all([
         API.get("/admin/stats"),
@@ -70,10 +72,12 @@ const AdminDashboard = () => {
       ]);
       setStats(statsRes.data);
       setCompanies(companiesRes.data);
+      if (isRefresh) toast.success("Dashboard data synchronized");
     } catch (err) {
       toast.error("Analytics synchronization failed");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -115,29 +119,53 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading || !stats) return <div className="p-20 text-center text-slate-400">Loading Central Console...</div>;
+  if (loading || !stats) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 space-y-4">
+      <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
+      <p className="font-heading animate-pulse">Initializing Central Console...</p>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fade-in relative z-10">
       {/* Header */}
-      <div className="glass-panel p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="w-14 h-14 bg-indigo-500/20 rounded-xl flex items-center justify-center border border-indigo-500/30">
-          <span className="text-3xl">🛠️</span>
+      <div className="glass-panel p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-indigo-500/20 rounded-xl flex items-center justify-center border border-indigo-500/30">
+            <span className="text-3xl">🛠️</span>
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-heading font-bold text-white mb-1">Central Console</h1>
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+            </div>
+            <p className="text-slate-400">Platform-wide management and real-time analytics.</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-white mb-1">Central Console</h1>
-          <p className="text-slate-400">Platform-wide management and analytics.</p>
-        </div>
+        
+        <button 
+          onClick={() => loadData(true)} 
+          disabled={refreshing}
+          className="btn-outline px-4 py-2 text-sm flex items-center gap-2 group"
+        >
+          <span className={`${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`}>🔄</span>
+          {refreshing ? 'Syncing...' : 'Refresh Data'}
+        </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-700/50 pb-px">
+      <div className="flex gap-1 bg-slate-900/40 p-1 rounded-xl border border-slate-800 w-fit">
         {["stats", "verification", "reports"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-6 py-3 text-sm font-medium capitalize border-b-2 transition-all ${
-              tab === t ? "border-brand-500 text-brand-400" : "border-transparent text-slate-400 hover:text-white"
+            className={`px-6 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+              tab === t 
+                ? "bg-brand-600 text-white shadow-lg" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
             }`}
           >
             {t}
@@ -146,7 +174,12 @@ const AdminDashboard = () => {
       </div>
 
       {/* Content */}
-      <div className="animate-fade-in">
+      <motion.div 
+        key={tab}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         {tab === "stats" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard title="Total Students" value={stats.total_students} colorClass="bg-blue-500" lineColor="#3b82f6" icon="🎓" />
@@ -158,80 +191,114 @@ const AdminDashboard = () => {
         )}
 
         {tab === "verification" && (
-          <div className="glass-panel overflow-hidden">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-800 text-slate-300">
-                <tr>
-                  <th className="px-6 py-4">Company Name</th>
-                  <th className="px-6 py-4">Email</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50">
-                {companies.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-800/30">
-                    <td className="px-6 py-4 font-medium text-white">{c.name}</td>
-                    <td className="px-6 py-4 text-slate-400">{c.email}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        c.verification_status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' : 
-                        c.verification_status === 'rejected' ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400'
-                      }`}>
-                        {c.verification_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                       {c.verification_status !== 'approved' && (
-                         <button onClick={() => handleVerify(c.id, 'approved')} className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded hover:bg-emerald-500/20">Approve</button>
-                       )}
-                       {c.verification_status !== 'rejected' && (
-                         <button onClick={() => handleVerify(c.id, 'rejected')} className="text-xs bg-red-500/10 text-red-400 border border-red-500/30 px-3 py-1 rounded hover:bg-red-500/20">Reject</button>
-                       )}
-                    </td>
+          <div className="glass-panel overflow-hidden border-slate-800/50">
+            {companies.length > 0 ? (
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-800/50 text-slate-300">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Company Name</th>
+                    <th className="px-6 py-4 font-semibold">Email Domain</th>
+                    <th className="px-6 py-4 font-semibold">Verification Status</th>
+                    <th className="px-6 py-4 text-right font-semibold">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {companies.map(c => (
+                    <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-4 font-medium text-white">{c.name}</td>
+                      <td className="px-6 py-4 text-slate-400 font-mono text-xs">{c.email}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                          c.verification_status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                          c.verification_status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 
+                          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {c.verification_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                         {c.verification_status !== 'approved' && (
+                           <button 
+                             onClick={() => handleVerify(c.id, 'approved')} 
+                             className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20 transition-all font-medium"
+                           >
+                            Approve
+                           </button>
+                         )}
+                         {c.verification_status !== 'rejected' && (
+                           <button 
+                             onClick={() => handleVerify(c.id, 'rejected')} 
+                             className="text-[11px] bg-red-500/10 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition-all font-medium"
+                           >
+                            Reject
+                           </button>
+                         )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-20 text-center space-y-3">
+                <div className="text-4xl opacity-20">🏢</div>
+                <p className="text-slate-500 font-medium">No company records found for verification.</p>
+              </div>
+            )}
           </div>
         )}
 
         {tab === "reports" && (
-          <div className="glass-panel p-8 space-y-6 text-center">
-            <div className="max-w-md mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="glass-panel p-8 flex flex-col items-center text-center justify-center">
+              <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center mb-6 border border-brand-500/20">
+                <span className="text-3xl">📊</span>
+              </div>
               <h3 className="text-xl font-bold text-white mb-2">Export Data</h3>
-              <p className="text-slate-400 mb-6 text-sm">Download a comprehensive CSV report containing all students, companies, and their application statuses.</p>
-              <button onClick={exportReport} className="btn-primary px-10 py-3">
-                📥 Download Placement Report (CSV)
+              <p className="text-slate-400 mb-8 text-sm max-w-xs">Download a structured CSV report containing students, companies, and application insights.</p>
+              <button onClick={exportReport} className="btn-primary w-full max-w-xs py-3">
+                📥 Download Placement Report
               </button>
             </div>
             
-            <div className="border-t border-slate-700/50 pt-8 mt-8">
-               <h3 className="text-xl font-bold text-white mb-2">Bulk Student Import</h3>
-               <p className="text-slate-400 text-sm mb-4">Paste student JSON data to onboard multiple students at once.</p>
+            <div className="glass-panel p-8 flex flex-col h-full">
+               <div className="flex items-center gap-3 mb-6">
+                 <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center border border-purple-500/20 text-xl">🚀</div>
+                 <div>
+                   <h3 className="text-lg font-bold text-white">Bulk Student Import</h3>
+                   <p className="text-slate-400 text-xs">Onboard multiple students via JSON</p>
+                 </div>
+               </div>
+               
                <textarea 
-                  className="input-field h-32 mb-4 font-mono text-xs" 
-                  placeholder='[{"name": "John", "email": "john@ex.com", "cgpa": 8.5, "user_id": 10}]'
+                  className="input-field h-40 mb-4 font-mono text-[11px] resize-none" 
+                  placeholder='[{"name": "John Doe", "email": "john@university.edu", "cgpa": 8.5, "user_id": 101}]'
                   id="bulk-input"
                />
+               
                <button 
                   onClick={async () => {
+                    const el = document.getElementById('bulk-input');
                     try {
-                      const data = JSON.parse(document.getElementById('bulk-input').value);
+                      const data = JSON.parse(el.value);
                       await API.post("/admin/bulk-students", { students: data });
-                      toast.success("Imported!");
-                    } catch { toast.error("Invalid JSON or import failed"); }
+                      toast.success("Batch import successful");
+                      el.value = "";
+                      loadData();
+                    } catch { 
+                      toast.error("Format error: Ensure data is a valid JSON array"); 
+                    }
                   }}
-                  className="btn-outline px-10"
+                  className="btn-outline w-full py-3"
                 >
-                  Confirm Bulk Import
+                  Confirm Batch Import
                 </button>
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
+
 
 export default AdminDashboard;

@@ -11,6 +11,18 @@ NexusPlace is a completely modernized Placement Management System designed to br
 
 The frontend experience is entirely bespoke, utilizing `framer-motion` and custom CSS for a premium, interactive, and responsive glassmorphic aesthetic.
 
+---
+
+## 📈 Development Activity
+
+| Log Date | Update Detail | Scope | Status |
+| :--- | :--- | :--- | :--- |
+| **Mar 14, 2026** | **Admin Experience & Reliability**: Optimized controller documentation with JSDoc, improved global error handling strings, and enhanced Admin Dashboard with "Live Sync" and segmented navigation. | Backend / UI | ✅ Complete |
+| **Mar 12, 2026** | **Bug Resolution**: Fixed SQL syntax issues in stats query and resolved port conflicts. | Infrastructure | ✅ Complete |
+| **Mar 11, 2026** | **Deployment**: Configured Vercel/Cloud-ready environment variables and SSL handling. | DevOps | ✅ Complete |
+
+---
+
 ## 🌟 Core Features
 
 ### 🔐 Security & Architecture
