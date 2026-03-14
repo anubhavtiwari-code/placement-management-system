@@ -1,4 +1,5 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const API = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "https://nexusplace-api.onrender.com/api",
@@ -15,7 +16,6 @@ API.interceptors.request.use((req) => {
 });
 
 // Global Error Handler
-import toast from "react-hot-toast";
 API.interceptors.response.use(
   (response) => response,
   (error) => {
