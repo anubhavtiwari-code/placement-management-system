@@ -71,7 +71,10 @@ exports.getProfile = (req, res) => {
         return res.status(404).json({ message: "Student profile not found" });
       }
 
-      return res.status(200).json(results[0]);
+      return res.status(200).json({ 
+        success: true,
+        profile: results[0] 
+      });
     }
   );
 };

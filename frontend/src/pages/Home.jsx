@@ -17,7 +17,7 @@ export default function Home() {
         className="text-center max-w-4xl mx-auto z-10"
       >
         <span className="px-4 py-1.5 rounded-full bg-brand-500/10 text-brand-400 font-medium text-sm border border-brand-500/20 mb-6 inline-block">
-          ✨ Next-Gen Hiring Platform
+          🚀 Production Stabilized (v1.2.4)
         </span>
         
         <h1 className="text-5xl md:text-7xl font-bold font-heading text-white tracking-tight mb-6 leading-tight">

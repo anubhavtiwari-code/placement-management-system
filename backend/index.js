@@ -137,6 +137,17 @@ const initDB = async () => {
     });
   }
   
+  // 5️⃣ Data Repair: Link orphaned students to users by email
+  const dataRepair = `
+    UPDATE students s
+    JOIN users u ON s.email = u.email
+    SET s.user_id = u.id
+    WHERE s.user_id IS NULL
+  `;
+  db.query(dataRepair, (err) => {
+    if (!err) console.log("✅ Student-User links synchronized");
+  });
+
   console.log("✅ Database Schema Integrity Verified");
 };
 

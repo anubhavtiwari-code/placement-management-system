@@ -10,7 +10,13 @@ const StudentProfile = () => {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/student/profile");
-        setProfile(res.data.profile);
+        // Support both {profile: {...}} and direct {...} formats
+        const profileData = res.data.profile || res.data;
+        if (profileData && profileData.name) {
+          setProfile(profileData);
+        } else {
+          throw new Error("Invalid profile data");
+        }
       } catch (err) {
         console.error("Failed to load profile", err);
         toast.error("Failed to fetch profile details");

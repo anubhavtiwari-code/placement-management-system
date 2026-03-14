@@ -9,9 +9,24 @@ const API = axios.create({
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
   if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
+    req.headers.Authorization = `Bearer ${token.replace(/^"|"$/g, '')}`;
   }
   return req;
 });
+
+// Global Error Handler
+import toast from "react-hot-toast";
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error.response?.data?.message || "Cloud Connection Error";
+    if (error.response?.status === 401) {
+      localStorage.clear(); // Session expired
+    }
+    console.error("🚀 API [Error]:", message);
+    toast.error(message);
+    return Promise.reject(error);
+  }
+);
 
 export default API;

@@ -19,7 +19,12 @@ const StudentDashboard = () => {
   };
 
   useEffect(() => {
-    API.get("/job_drives").then((res) => setJobs(res.data.job_drives));
+    API.get("/job_drives")
+      .then((res) => setJobs(res.data?.job_drives || []))
+      .catch((err) => {
+        console.error("Job Drives Fetch Error:", err);
+        setJobs([]);
+      });
     fetchMyApplications();
   }, []);
 

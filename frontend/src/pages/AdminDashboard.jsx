@@ -66,14 +66,23 @@ const AdminDashboard = () => {
   const loadData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     
-    // Fetch stats first for immediate display
+    // Fetch stats first for immediate display (with cache busting & timeout)
     try {
-      const statsRes = await API.get("/admin/stats");
-      setStats(statsRes.data);
-      setLoading(false); // Move past loading screen as soon as stats are here
+      const statsRes = await API.get(`/admin/stats?cb=${Date.now()}`);
+      console.log("🔍 Stats Raw Data:", statsRes.data);
+      
+      // Ensure we have at least total_students to consider it "loaded"
+      if (statsRes.data && (statsRes.data.total_students !== undefined)) {
+        setStats(statsRes.data);
+        console.log("📈 Production Stats Sync Successful");
+      } else {
+        throw new Error("Invalid stats format received");
+      }
+      setLoading(false); // Move past loading screen if we have a valid response
     } catch (err) {
-      console.error("Stats fetch error:", err);
-      toast.error("Statistics synchronization failed");
+      console.error("Stats sync error:", err);
+      toast.error("Statistics failed to load. Please refresh.");
+      setLoading(false); // Still move past loader to allow access to other tabs
     }
 
     // Fetch companies separately
@@ -126,10 +135,18 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading || !stats) return (
+  if (loading) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 space-y-4">
       <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
       <p className="font-heading animate-pulse text-brand-400">Synchronizing Production Environment (v1.2)...</p>
+    </div>
+  );
+
+  if (!stats) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 space-y-4">
+      <p className="text-xl font-bold">⚠️ Connection Stalled</p>
+      <p className="text-slate-500">Could not retrieve platform metrics.</p>
+      <button onClick={() => window.location.reload()} className="btn-primary mt-4">Hard Reset Dashboard</button>
     </div>
   );
 
