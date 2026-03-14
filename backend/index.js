@@ -123,7 +123,8 @@ const initDB = async () => {
     { table: 'companies', col: 'verification_status', sql: "ALTER TABLE companies ADD COLUMN verification_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'" },
     { table: 'applications', col: 'interview_date', sql: "ALTER TABLE applications ADD COLUMN interview_date DATETIME DEFAULT NULL" },
     { table: 'job_drives', col: 'status', sql: "ALTER TABLE job_drives ADD COLUMN status ENUM('open', 'closed') DEFAULT 'open'" },
-    { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD COLUMN user_id INT, ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" }
+    { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD COLUMN user_id INT, ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" },
+    { table: 'applications', col: 'status', sql: "ALTER TABLE applications MODIFY COLUMN status ENUM('Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected') DEFAULT 'Applied'" }
   ];
 
   for (const m of migrations) {

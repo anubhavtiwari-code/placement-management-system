@@ -122,7 +122,7 @@ const AdminDashboard = () => {
   if (loading || !stats) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 space-y-4">
       <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
-      <p className="font-heading animate-pulse">Initializing Central Console...</p>
+      <p className="font-heading animate-pulse text-brand-400">Synchronizing Production Environment (v1.2)...</p>
     </div>
   );
 

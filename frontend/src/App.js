@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Navbar from "./components/Navbar";
 import StudentApplications from "./pages/StudentApplications";
 import StudentProfile from "./components/StudentProfile";
+import API from "./api/api";
 
 const PrivateRoute = ({ children, role }) => {
   const token = localStorage.getItem("token");
@@ -18,6 +19,7 @@ const PrivateRoute = ({ children, role }) => {
 };
 
 function App() {
+  console.log("🚀 System initialized. API Gateway:", API.defaults.baseURL);
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
