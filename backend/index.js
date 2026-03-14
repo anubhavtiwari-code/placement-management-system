@@ -27,7 +27,15 @@ app.use((req, res, next) => {
 // AUTH ROUTES
 app.use("/api/auth",    require("./routes/auth.route"));
 
-// CORE MODULE ROUTES
+// LEGACY & COMPATIBILITY ALIASES (Prevents 404s on older frontend versions)
+const adController = require("./controllers/admin.controller");
+
+app.get("/api/dashboard/stats", auth(["admin"]), adController.getStats);
+app.get("/dashboard/stats",     auth(["admin"]), adController.getStats);
+app.get("/api/admin/stats",     auth(["admin"]), adController.getStats);
+app.get("/admin/stats",         auth(["admin"]), adController.getStats);
+
+// PRIMARY MODULE ROUTES
 app.use("/api/admin",   require("./routes/admin.route")); 
 app.use("/api/company", require("./routes/company.route"));
 app.use("/api/student", require("./routes/student.route"));
