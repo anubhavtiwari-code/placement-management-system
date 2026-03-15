@@ -118,35 +118,44 @@ const initDB = async () => {
     }
   }
 
-  // Column Migrations (for existing tables)
+  // Column Migrations (Sequential Await)
   const migrations = [
     { table: 'companies', col: 'verification_status', sql: "ALTER TABLE companies ADD COLUMN verification_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'" },
     { table: 'applications', col: 'interview_date', sql: "ALTER TABLE applications ADD COLUMN interview_date DATETIME DEFAULT NULL" },
     { table: 'job_drives', col: 'status', sql: "ALTER TABLE job_drives ADD COLUMN status ENUM('open', 'closed') DEFAULT 'open'" },
-    { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD COLUMN user_id INT, ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" },
+    { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD COLUMN user_id INT" },
+    { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD CONSTRAINT fk_student_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" },
     { table: 'applications', col: 'status', sql: "ALTER TABLE applications MODIFY COLUMN status ENUM('Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected') DEFAULT 'Applied'" }
   ];
 
   for (const m of migrations) {
-    db.query(`SHOW COLUMNS FROM ${m.table} LIKE '${m.col}'`, (err, rows) => {
-      if (!err && rows.length === 0) {
-        db.query(m.sql, (err2) => {
-          if (!err2) console.log(`Migration: Added ${m.col} to ${m.table}`);
-        });
+    try {
+      const [rows] = await db.promise().query(`SHOW COLUMNS FROM ${m.table} LIKE '${m.col}'`);
+      if (rows.length === 0 || (m.sql.includes("MODIFY") || m.sql.includes("CONSTRAINT"))) {
+        // For MODIFY/CONSTRAINT we just try to run it, catching if it exists
+        await db.promise().query(m.sql);
       }
-    });
+    } catch (err) {
+      // Ignore errors like "Duplicate column name" or "Duplicate foreign key"
+      if (!err.message.includes("Duplicate") && !err.message.includes("already exists")) {
+        console.warn(`Migration Notice (${m.table}.${m.col}):`, err.message);
+      }
+    }
   }
   
   // 5️⃣ Data Repair: Link orphaned students to users by email
-  const dataRepair = `
-    UPDATE students s
-    JOIN users u ON s.email = u.email
-    SET s.user_id = u.id
-    WHERE s.user_id IS NULL
-  `;
-  db.query(dataRepair, (err) => {
-    if (!err) console.log("✅ Student-User links synchronized");
-  });
+  try {
+    const dataRepair = `
+      UPDATE students s
+      JOIN users u ON s.email = u.email
+      SET s.user_id = u.id
+      WHERE s.user_id IS NULL
+    `;
+    await db.promise().query(dataRepair);
+    console.log("✅ Student-User links synchronized");
+  } catch (err) {
+    console.error("Data Repair Fail:", err.message);
+  }
 
   console.log("✅ Database Schema Integrity Verified");
 };

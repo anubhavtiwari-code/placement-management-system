@@ -8,10 +8,11 @@ exports.applyJob = (req, res) => {
     return res.status(400).json({ message: "Job drive ID required" });
   }
 
-  // 1️⃣ Get student id
+  // 1️⃣ Get student id (Prioritize user_id link)
+  const userId = req.user.id;
   db.query(
-    "SELECT id FROM students WHERE email = ?",
-    [studentEmail],
+    "SELECT id FROM students WHERE user_id = ? OR email = ?",
+    [userId, studentEmail],
     (err, studentResult) => {
       if (err || studentResult.length === 0) {
         return res.status(400).json({ message: "Student profile not found" });
@@ -56,25 +57,24 @@ exports.applyJob = (req, res) => {
   );
 };
 exports.getProfile = (req, res) => {
-  const userId = req.user.id; // users.id from JWT
+  const userId = req.user.id;
+  const email = req.user.email;
 
-  db.query(
-    "SELECT name, email, cgpa FROM students WHERE user_id = ?",
-    [userId],
-    (err, results) => {
-      if (err) {
-        console.error("Profile fetch error:", err);
-        return res.status(500).json({ message: "Failed to fetch profile" });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ message: "Student profile not found" });
-      }
-
-      return res.status(200).json({ 
-        success: true,
-        profile: results[0] 
-      });
+  // Try user_id first, then fallback to email (to handle legacy data)
+  const query = "SELECT name, email, cgpa FROM students WHERE user_id = ? OR email = ?";
+  db.query(query, [userId, email], (err, results) => {
+    if (err) {
+      console.error("Profile fetch error:", err);
+      return res.status(500).json({ message: "Failed to fetch profile" });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Student profile not found" });
+    }
+
+    return res.status(200).json({ 
+      success: true,
+      profile: results[0] 
+    });
+  });
 };

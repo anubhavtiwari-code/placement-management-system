@@ -144,9 +144,15 @@ const AdminDashboard = () => {
 
   if (!stats) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 space-y-4">
-      <p className="text-xl font-bold">⚠️ Connection Stalled</p>
-      <p className="text-slate-500">Could not retrieve platform metrics.</p>
-      <button onClick={() => window.location.reload()} className="btn-primary mt-4">Hard Reset Dashboard</button>
+      <p className="text-xl font-bold text-white">⚠️ Cloud Sync Interrupted</p>
+      <div className="text-center text-slate-500 text-sm max-w-md bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+        <p>The dashboard is having trouble communicating with the platform metrics engine. This usually happens during database cold starts.</p>
+        <p className="mt-2 text-brand-500/70 font-mono">System ID: v1.2.5-Stable</p>
+      </div>
+      <div className="flex gap-4 mt-4">
+        <button onClick={() => window.location.reload()} className="btn-primary">Retry Sync</button>
+        <button onClick={() => { localStorage.clear(); window.location.href='/login'; }} className="px-6 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all">Clear Session</button>
+      </div>
     </div>
   );
 
