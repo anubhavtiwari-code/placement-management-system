@@ -7,12 +7,15 @@ const db = require("../config/db");
 const sendAssignmentEmail = require("../utils/sendEmail");
 
 exports.getMyApplications = (req, res) => {
-  const userId = req.user.id; // users.id from JWT
+  const userId = req.user.id;
+  const email = req.user.email;
 
-  // 1️⃣ Find student using user_id
+  console.log(`[DEBUG] Fetching Apps for: ${email} (ID: ${userId})`);
+
+  // 1️⃣ Find student using user_id or email (Case Insensitive)
   db.query(
-    "SELECT id FROM students WHERE user_id = ?",
-    [userId],
+    "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
+    [userId, email],
     (err, studentRows) => {
       if (err) {
         console.error("Student lookup failed:", err);
@@ -20,7 +23,8 @@ exports.getMyApplications = (req, res) => {
       }
 
       if (studentRows.length === 0) {
-        return res.status(200).json({ applications: [] });
+        console.warn(`[WARN] No student record for: ${email}`);
+        return res.status(200).json({ success: true, applications: [] });
       }
 
       const studentId = studentRows[0].id;

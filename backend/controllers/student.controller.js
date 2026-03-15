@@ -8,13 +8,16 @@ exports.applyJob = (req, res) => {
     return res.status(400).json({ message: "Job drive ID required" });
   }
 
-  // 1️⃣ Get student id (Prioritize user_id link)
+  // 1️⃣ Get student id (Prioritize user_id link + Case Insensitive email)
   const userId = req.user.id;
+  console.log(`[DEBUG] Apply Request from: ${studentEmail} (job: ${job_drive_id})`);
+  
   db.query(
-    "SELECT id FROM students WHERE user_id = ? OR email = ?",
+    "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
     [userId, studentEmail],
     (err, studentResult) => {
       if (err || studentResult.length === 0) {
+        console.error(`[ERROR] Apply failed: No student found for ${studentEmail}`);
         return res.status(400).json({ message: "Student profile not found" });
       }
 
@@ -60,8 +63,10 @@ exports.getProfile = (req, res) => {
   const userId = req.user.id;
   const email = req.user.email;
 
-  // Try user_id first, then fallback to email (to handle legacy data)
-  const query = "SELECT name, email, cgpa FROM students WHERE user_id = ? OR email = ?";
+  console.log(`[DEBUG] Profile Request: ${email}`);
+
+  // Try user_id first, then fallback to email (Case Insensitive)
+  const query = "SELECT name, email, cgpa FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)";
   db.query(query, [userId, email], (err, results) => {
     if (err) {
       console.error("Profile fetch error:", err);
@@ -69,7 +74,8 @@ exports.getProfile = (req, res) => {
     }
 
     if (results.length === 0) {
-      return res.status(404).json({ message: "Student profile not found" });
+      console.warn(`[WARN] Profile not found in students table for: ${email}`);
+      return res.status(404).json({ message: "Student profile not found. Please re-register or contact admin." });
     }
 
     return res.status(200).json({ 
