@@ -13,19 +13,33 @@ exports.register = async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
 
-  // 1️⃣ Insert into users
   db.query(
-    "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
-    [email, hashedPassword, role],
-    (err, userResult) => {
-      if (err) {
-        return res.status(500).json({ message: "User registration failed" });
+    "SELECT id FROM users WHERE email = ?",
+    [email],
+    (err, existingUser) => {
+      if (!err && existingUser.length > 0) {
+        // User exists, move to profile creation
+        return createProfile(existingUser[0].id);
       }
 
-      const userId = userResult.insertId;
+      // New user
+      db.query(
+        "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+        [email, hashedPassword, role],
+        (err, userResult) => {
+          if (err) {
+            console.error("REG ERROR:", err);
+            return res.status(500).json({ message: "Account creation failed" });
+          }
+          createProfile(userResult.insertId);
+        }
+      );
+    }
+  );
 
-      // 2️⃣ Create role-specific profile
-      if (role === "student") {
+  const createProfile = (userId) => {
+    // 2️⃣ Create role-specific profile
+    if (role === "student") {
         // Use INSERT ... ON DUPLICATE KEY UPDATE to handle partial legacy data
         db.query(
           "INSERT INTO students (name, email, cgpa, user_id) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), name = VALUES(name)",
@@ -54,7 +68,6 @@ exports.register = async (req, res) => {
         return res.status(201).json({ message: "Admin registered successfully" });
       }
     }
-  );
 };
 
 

@@ -37,7 +37,7 @@ const StatCard = ({ title, value, colorClass, lineColor, icon }) => {
           {icon}
         </div>
       </div>
-      <div style={{ width: '100%', height: 60, position: 'relative' }}>
+      <div className="h-[60px] w-full mt-2 relative">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
             <Tooltip

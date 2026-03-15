@@ -37,7 +37,7 @@ exports.applyJob = (req, res) => {
 
           // 3️⃣ Insert new application
           db.query(
-            "INSERT INTO applications (student_id, job_drive_id, status) VALUES (?, ?, 'applied')",
+            "INSERT INTO applications (student_id, job_drive_id, status) VALUES (?, ?, 'Applied')",
             [student_id, job_drive_id],
             (err, result) => {
               if (err) {
