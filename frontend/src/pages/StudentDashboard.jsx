@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
 import StudentApplications from "./StudentApplications";
+import StudentProfile from "../components/StudentProfile";
 import toast from "react-hot-toast";
 
 const StudentDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [appliedJobIds, setAppliedJobIds] = useState([]);
   const [loadingMap, setLoadingMap] = useState({});
+  const [activeTab, setActiveTab] = useState("jobs"); // "jobs" | "profile"
 
   const fetchMyApplications = async () => {
     try {
@@ -48,15 +50,37 @@ const StudentDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-fade-in">
       
-      {/* Header section */}
-      <div className="glass-panel p-6 sm:p-8 flex items-center justify-between">
+      {/* Header section with Tabs */}
+      <div className="glass-panel p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-heading font-bold text-white mb-2">🎓 Student Portal</h1>
           <p className="text-slate-400">Manage your profile, view jobs, and track your applications.</p>
         </div>
+        
+        <div className="flex bg-slate-900/50 p-1.5 rounded-xl border border-slate-700/50 self-start md:self-auto">
+          <button
+            onClick={() => setActiveTab("jobs")}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              activeTab === "jobs" ? "bg-brand-500 text-white shadow-lg shadow-brand-500/20" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Available Jobs
+          </button>
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              activeTab === "profile" ? "bg-brand-500 text-white shadow-lg shadow-brand-500/20" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            My Profile
+          </button>
+        </div>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      {activeTab === "profile" ? (
+        <StudentProfile />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Job Board */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-2xl font-bold font-heading text-white flex items-center gap-2">
@@ -104,6 +128,7 @@ const StudentDashboard = () => {
            <StudentApplications />
         </div>
       </div>
+      )}
     </div>
   );
 };

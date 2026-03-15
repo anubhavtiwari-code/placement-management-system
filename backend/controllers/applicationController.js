@@ -10,24 +10,29 @@ exports.getMyApplications = (req, res) => {
   const userId = req.user.id;
   const email = req.user.email;
 
-  console.log(`[DEBUG] Fetching Apps for: ${email} (ID: ${userId})`);
+  const findOrCreateStudent = (cb) => {
+    db.query(
+      "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
+      [userId, email],
+      (err, results) => {
+        if (err) return cb(err);
+        if (results.length > 0) return cb(null, results[0].id);
 
-  // 1️⃣ Find student using user_id or email (Case Insensitive)
-  db.query(
-    "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
-    [userId, email],
-    (err, studentRows) => {
-      if (err) {
-        console.error("Student lookup failed:", err);
-        return res.status(500).json({ message: "Student lookup failed" });
+        // Auto-Provision
+        db.query(
+          "INSERT INTO students (name, email, user_id) VALUES (?, ?, ?)",
+          ["Student", email, userId],
+          (err, insertRes) => {
+            if (err) return cb(err);
+            cb(null, insertRes.insertId);
+          }
+        );
       }
+    );
+  };
 
-      if (studentRows.length === 0) {
-        console.warn(`[WARN] No student record for: ${email}`);
-        return res.status(200).json({ success: true, applications: [] });
-      }
-
-      const studentId = studentRows[0].id;
+  findOrCreateStudent((err, studentId) => {
+    if (err) return res.status(200).json({ success: true, applications: [] });
 
       // 2️⃣ Fetch applications with job title, company name, and job_drive_id
       const query = `

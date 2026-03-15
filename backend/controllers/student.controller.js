@@ -8,20 +8,36 @@ exports.applyJob = (req, res) => {
     return res.status(400).json({ message: "Job drive ID required" });
   }
 
-  // 1️⃣ Get student id (Prioritize user_id link + Case Insensitive email)
+  // 1️⃣ Get student id (With Auto-Provisioning fallback)
   const userId = req.user.id;
-  console.log(`[DEBUG] Apply Request from: ${studentEmail} (job: ${job_drive_id})`);
   
-  db.query(
-    "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
-    [userId, studentEmail],
-    (err, studentResult) => {
-      if (err || studentResult.length === 0) {
-        console.error(`[ERROR] Apply failed: No student found for ${studentEmail}`);
-        return res.status(400).json({ message: "Student profile not found" });
-      }
+  const findOrCreateStudent = (cb) => {
+    db.query(
+      "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)",
+      [userId, studentEmail],
+      (err, results) => {
+        if (err) return cb(err);
+        if (results.length > 0) return cb(null, results[0].id);
 
-      const student_id = studentResult[0].id;
+        // Profile missing? Try to auto-create from user table
+        console.log(`[REPAIR] Auto-provisioning profile for: ${studentEmail}`);
+        db.query(
+          "INSERT INTO students (name, email, user_id) VALUES (?, ?, ?)",
+          [req.user.name || "Student", studentEmail, userId],
+          (err, insertRes) => {
+            if (err) return cb(err);
+            cb(null, insertRes.insertId);
+          }
+        );
+      }
+    );
+  };
+
+  findOrCreateStudent((err, student_id) => {
+    if (err) {
+      console.error(`[ERROR] Student lookup/provision failed for ${studentEmail}:`, err);
+      return res.status(400).json({ message: "Student profile not found" });
+    }
 
       // 2️⃣ Check if already applied to this job
       db.query(
@@ -63,24 +79,26 @@ exports.getProfile = (req, res) => {
   const userId = req.user.id;
   const email = req.user.email;
 
-  console.log(`[DEBUG] Profile Request: ${email}`);
-
-  // Try user_id first, then fallback to email (Case Insensitive)
+  // Use a reusable query to find or link
   const query = "SELECT name, email, cgpa FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)";
   db.query(query, [userId, email], (err, results) => {
-    if (err) {
-      console.error("Profile fetch error:", err);
-      return res.status(500).json({ message: "Failed to fetch profile" });
+    if (err) return res.status(500).json({ message: "Database Error" });
+
+    if (results.length > 0) {
+      return res.status(200).json({ success: true, profile: results[0] });
     }
 
-    if (results.length === 0) {
-      console.warn(`[WARN] Profile not found in students table for: ${email}`);
-      return res.status(404).json({ message: "Student profile not found. Please re-register or contact admin." });
-    }
-
-    return res.status(200).json({ 
-      success: true,
-      profile: results[0] 
-    });
+    // Attempt repair: Create if user exists
+    db.query(
+      "INSERT INTO students (name, email, user_id) VALUES (?, ?, ?)",
+      ["Student", email, userId],
+      (err) => {
+        if (err) return res.status(404).json({ message: "Profile creation failed" });
+        return res.status(200).json({ 
+          success: true, 
+          profile: { name: "Student", email: email, cgpa: 0 } 
+        });
+      }
+    );
   });
 };
