@@ -39,6 +39,8 @@ app.use((req, res, next) => {
 // =======================
 // ROUTES (JWT SYSTEM)
 // =======================
+app.use('/uploads', express.static('uploads'));
+
 
 // AUTH ROUTES
 app.use("/api/auth",    require("./routes/auth.route"));
@@ -125,7 +127,13 @@ const initDB = async () => {
     { table: 'job_drives', col: 'status', sql: "ALTER TABLE job_drives ADD COLUMN status ENUM('open', 'closed') DEFAULT 'open'" },
     { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD COLUMN user_id INT" },
     { table: 'students', col: 'user_id', sql: "ALTER TABLE students ADD CONSTRAINT fk_student_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" },
-    { table: 'applications', col: 'status', sql: "ALTER TABLE applications MODIFY COLUMN status ENUM('Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected') DEFAULT 'Applied'" }
+    { table: 'applications', col: 'status', sql: "ALTER TABLE applications MODIFY COLUMN status ENUM('Applied', 'Shortlisted', 'Interview', 'Selected', 'Rejected') DEFAULT 'Applied'" },
+    { table: 'students', col: 'phone', sql: "ALTER TABLE students ADD COLUMN phone VARCHAR(20)" },
+    { table: 'students', col: 'education', sql: "ALTER TABLE students ADD COLUMN education TEXT" },
+    { table: 'students', col: 'skills', sql: "ALTER TABLE students ADD COLUMN skills TEXT" },
+    { table: 'students', col: 'experience', sql: "ALTER TABLE students ADD COLUMN experience TEXT" },
+    { table: 'students', col: 'resume_url', sql: "ALTER TABLE students ADD COLUMN resume_url VARCHAR(500)" },
+    { table: 'students', col: 'portfolio_url', sql: "ALTER TABLE students ADD COLUMN portfolio_url VARCHAR(500)" }
   ];
 
   for (const m of migrations) {

@@ -79,8 +79,8 @@ exports.getProfile = (req, res) => {
   const userId = req.user.id;
   const email = req.user.email;
 
-  // Use a reusable query to find or link
-  const query = "SELECT name, email, cgpa FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)";
+  // Fetch all profile fields
+  const query = "SELECT name, email, cgpa, phone, education, skills, experience, resume_url, portfolio_url FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)";
   db.query(query, [userId, email], (err, results) => {
     if (err) return res.status(500).json({ message: "Database Error" });
 
@@ -96,9 +96,55 @@ exports.getProfile = (req, res) => {
         if (err) return res.status(404).json({ message: "Profile creation failed" });
         return res.status(200).json({ 
           success: true, 
-          profile: { name: "Student", email: email, cgpa: 0 } 
+          profile: { name: "Student", email: email, cgpa: 0, phone: "", education: "", skills: "", experience: "", resume_url: "", portfolio_url: "" } 
         });
       }
     );
+  });
+};
+
+exports.updateProfile = (req, res) => {
+  const userId = req.user.id;
+  const email = req.user.email;
+  const { name, phone, education, skills, experience, portfolio_url, cgpa } = req.body;
+  
+  // Handled by multer; req.file contains the uploaded file info if sent
+  let resume_url = null;
+  if (req.file) {
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    resume_url = `${baseUrl}/uploads/${req.file.filename}`;
+  } else if (req.body.resume_url) {
+    // Allows updating without re-uploading
+    resume_url = req.body.resume_url;
+  }
+
+  // Find if profile exists first
+  const findQuery = "SELECT id FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)";
+  db.query(findQuery, [userId, email], (err, results) => {
+    if (err) return res.status(500).json({ message: "Database Error" });
+
+    if (results.length === 0) {
+      // Create new
+      const insertQuery = `INSERT INTO students (name, email, user_id, phone, education, skills, experience, portfolio_url, cgpa, resume_url) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      db.query(insertQuery, [name || '', email, userId, phone || '', education || '', skills || '', experience || '', portfolio_url || '', cgpa || 0, resume_url || ''], (err, result) => {
+        if (err) return res.status(500).json({ message: "Failed to create profile" });
+        return res.status(200).json({ success: true, message: "Profile created successfully" });
+      });
+    } else {
+      // Update existing
+      const updateQuery = `UPDATE students SET name = ?, phone = ?, education = ?, skills = ?, experience = ?, portfolio_url = ?, cgpa = ?${resume_url ? ', resume_url = ?' : ''} WHERE id = ?`;
+      
+      const updateParams = [name || '', phone || '', education || '', skills || '', experience || '', portfolio_url || '', cgpa || 0];
+      if (resume_url) {
+        updateParams.push(resume_url);
+      }
+      updateParams.push(results[0].id);
+
+      db.query(updateQuery, updateParams, (err, result) => {
+        if (err) return res.status(500).json({ message: "Failed to update profile", error: err.message });
+        return res.status(200).json({ success: true, message: "Profile updated successfully", resume_url });
+      });
+    }
   });
 };
