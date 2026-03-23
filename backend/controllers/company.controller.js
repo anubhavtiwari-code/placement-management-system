@@ -160,7 +160,9 @@ exports.viewApplicants = (req, res) => {
         students.name   AS student_name,
         students.email  AS student_email,
         students.cgpa   AS student_cgpa,
+        students.skills AS student_skills,
         job_drives.job_title,
+        job_drives.description AS job_description,
         job_drives.id   AS job_drive_id,
         applications.status,
         applications.applied_at,
@@ -174,7 +176,14 @@ exports.viewApplicants = (req, res) => {
 
     db.query(query, [company_id], (err, results) => {
       if (err) return res.status(500).json({ message: "Database error" });
-      res.json({ count: results.length, applicants: results });
+      
+      const { calculateMatchScore } = require('../utils/matchEngine');
+      const applicantsWithScore = results.map(app => {
+         const score = calculateMatchScore(app.student_skills || "", (app.job_title || "") + " " + (app.job_description || ""));
+         return { ...app, match_score: score };
+      });
+
+      res.json({ count: applicantsWithScore.length, applicants: applicantsWithScore });
     });
   });
 };

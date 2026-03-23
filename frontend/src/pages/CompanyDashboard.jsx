@@ -464,7 +464,7 @@ const CompanyDashboard = () => {
                           />
                         </th>
                         <th className="px-6 py-4 font-medium">Candidate Profile</th>
-                        <th className="px-6 py-4 font-medium">Academic Rating</th>
+                        <th className="px-6 py-4 font-medium">Candidate Score</th>
                         <th className="px-6 py-4 font-medium">Target Pipeline</th>
                         <th className="px-6 py-4 font-medium">Interview Info</th>
                         <th className="px-6 py-4 font-medium text-right">Selection State</th>
@@ -488,7 +488,25 @@ const CompanyDashboard = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="font-bold text-brand-400 tracking-wide">{Number(a.student_cgpa).toFixed(2)}</span>
+                            <div className="flex flex-col gap-1.5 min-w-[120px]">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase">CGPA:</span>
+                                <span className="font-bold text-brand-400 tracking-wide">{Number(a.student_cgpa).toFixed(2)}</span>
+                              </div>
+                              {a.match_score !== undefined && (
+                                <div className="w-full flex flex-col gap-1 mt-0.5 p-1.5 rounded-md bg-slate-900/50 border border-slate-700/50">
+                                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                                    <span className="text-indigo-400">Match Pulse</span>
+                                    <span className={`text-[10px] ${a.match_score >= 70 ? "text-emerald-400" : a.match_score >= 40 ? "text-yellow-400" : "text-red-400"}`}>
+                                      {a.match_score}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-slate-950 rounded-full h-1 overflow-hidden border border-slate-800">
+                                     <div className={`h-full rounded-full transition-all duration-1000 ${a.match_score >= 70 ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : a.match_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${a.match_score}%` }}></div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-slate-300">{a.job_title}</td>
                           <td className="px-6 py-4">

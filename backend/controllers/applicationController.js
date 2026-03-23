@@ -66,6 +66,8 @@ exports.getMyApplications = (req, res) => {
  * GET /api/job_drives
  * Fetch all open job drives for students
  */
+const { calculateMatchScore } = require('../utils/matchEngine');
+
 exports.getAllOpenDrives = (req, res) => {
   const query = `
     SELECT 
@@ -86,6 +88,23 @@ exports.getAllOpenDrives = (req, res) => {
       console.error("Fetch job drives failed:", err);
       return res.status(500).json({ message: "Failed to fetch job drives" });
     }
-    res.status(200).json({ job_drives: results });
+
+    // If student, calculate match score
+    if (req.user && req.user.role === 'student') {
+      db.query("SELECT skills FROM students WHERE user_id = ? OR LOWER(email) = LOWER(?)", [req.user.id, req.user.email], (err, studentRes) => {
+        if (!err && studentRes.length > 0) {
+          const studentSkills = studentRes[0].skills || "";
+          const jobsWithScores = results.map(job => ({
+            ...job,
+            match_score: calculateMatchScore(studentSkills, job.job_title + " " + (job.description || ""))
+          }));
+          return res.status(200).json({ job_drives: jobsWithScores });
+        } else {
+          res.status(200).json({ job_drives: results });
+        }
+      });
+    } else {
+      res.status(200).json({ job_drives: results });
+    }
   });
 };
