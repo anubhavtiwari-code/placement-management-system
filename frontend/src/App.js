@@ -11,6 +11,8 @@ import StudentApplications from "./pages/StudentApplications";
 import StudentProfile from "./components/StudentProfile";
 import API from "./api/api";
 
+import About from "./pages/About";
+
 const PrivateRoute = ({ children, role }) => {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
@@ -26,6 +28,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
          <Route path="/student/applications" element={<StudentApplications />} />

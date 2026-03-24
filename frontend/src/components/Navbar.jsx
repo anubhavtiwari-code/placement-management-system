@@ -49,6 +49,10 @@ const Navbar = () => {
 
             {/* Nav Items */}
             <div className="flex items-center gap-2 sm:gap-4">
+              <Link to="/about" className="text-slate-300 hover:text-white font-medium text-sm transition-colors px-3 hidden sm:block">
+                About
+              </Link>
+              
               <button
                 onClick={() => setIsBotOpen(!isBotOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 transition-all"
