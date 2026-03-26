@@ -16,9 +16,7 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="text-center max-w-4xl mx-auto z-10"
       >
-        {/* <span className="px-4 py-1.5 rounded-full bg-brand-500/10 text-brand-400 font-medium text-sm border border-brand-500/20 mb-6 inline-block">
-          🚀 Production Stabilized (v1.2.9-Ultra)
-        </span> */}
+        
         
         <h1 className="text-5xl md:text-7xl font-bold font-heading text-white tracking-tight mb-6 leading-tight">
           Launch your career with <br className="hidden md:block"/>
